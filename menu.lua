@@ -275,14 +275,6 @@ end
 -- =====================================================
 
 UserInputService.InputBegan:Connect(function(input)
-    -- TOGGLE MENU (RightControl)
-    if input.KeyCode == Config.MenuKey then
-        if MenuFrame then
-            MenuFrame.Visible = not MenuFrame.Visible
-        end
-    end
-    
-    -- HOTKEY F8: Toggle Main Feature
     if input.KeyCode == Enum.KeyCode.F8 then
         ToggleMainFeature()
     end
@@ -391,6 +383,14 @@ function InitializeAllFeatures()
     
     -- Tạo menu
     MenuFrame = CreateMenu()
+
+    -- Toggle menu bằng nút tròn
+FloatingButton.MouseButton1Click:Connect(function()
+    if MenuFrame then
+        MenuFrame.Visible = not MenuFrame.Visible
+    end
+end)
+
     
     print("===========================================")
     print("DAHOOD AIM SUITE LOADED SUCCESSFULLY")
