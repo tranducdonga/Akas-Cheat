@@ -1,5 +1,5 @@
 -- =====================================================
--- MENU UPDATED WITH ESP ON/OFF TOGGLE
+-- Akas Cheat Menu
 -- =====================================================
 
 function CreateESPSection()
@@ -7,8 +7,8 @@ function CreateESPSection()
     local espFrame = Instance.new("Frame")
     espFrame.Name = "ESP_Section"
     espFrame.Size = UDim2.new(0.9, 0, 0, 60)
-    espFrame.Position = UDim2.new(0.05, 0, 0.5, 0)  -- Vị trí giữa menu
-    espFrame.BackgroundColor3 = Color3.fromRGB(50, 30, 30)  -- Nền đỏ đậm
+    espFrame.Position = UDim2.new(0.05, 0, 0.5, 0)
+    espFrame.BackgroundColor3 = Color3.fromRGB(50, 30, 30)
     espFrame.BackgroundTransparency = 0.2
     espFrame.Parent = MenuFrame
     
@@ -30,7 +30,7 @@ function CreateESPSection()
     titleCorner.CornerRadius = UDim.new(0, 8)
     titleCorner.Parent = espTitle
     
-    -- ESP ON/OFF Button (Lớn - Chính)
+    -- ESP ON/OFF Button
     local espToggleBtn = Instance.new("TextButton")
     espToggleBtn.Name = "ESPToggle"
     espToggleBtn.Text = "ESP: OFF"
@@ -38,7 +38,7 @@ function CreateESPSection()
     espToggleBtn.Position = UDim2.new(0.05, 0, 0.35, 0)
     espToggleBtn.Font = Enum.Font.GothamBold
     espToggleBtn.TextSize = 12
-    espToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)  -- Mặc định OFF
+    espToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
     espToggleBtn.TextColor3 = Color3.white
     espToggleBtn.Parent = espFrame
     
@@ -46,7 +46,7 @@ function CreateESPSection()
     toggleCorner.CornerRadius = UDim.new(0, 6)
     toggleCorner.Parent = espToggleBtn
     
-    -- Team Check Toggle (nút phụ)
+    -- Team Check Toggle
     local teamToggleBtn = Instance.new("TextButton")
     teamToggleBtn.Name = "TeamToggle"
     teamToggleBtn.Text = "TEAM"
@@ -62,7 +62,7 @@ function CreateESPSection()
     teamCorner.CornerRadius = UDim.new(0, 6)
     teamCorner.Parent = teamToggleBtn
     
-    -- FOV Adjust (nếu đang ở Mode Silent)
+    -- FOV Adjust
     local fovAdjustBtn = Instance.new("TextButton")
     fovAdjustBtn.Name = "FOVAdjust"
     fovAdjustBtn.Text = "FOV " .. Config.FOVSize
@@ -73,7 +73,7 @@ function CreateESPSection()
     fovAdjustBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
     fovAdjustBtn.TextColor3 = Color3.white
     fovAdjustBtn.Parent = espFrame
-    fovAdjustBtn.Visible = Config.Mode == 1  -- Chỉ hiện khi Silent Aim
+    fovAdjustBtn.Visible = Config.Mode == 1
     
     local fovCorner = Instance.new("UICorner")
     fovCorner.CornerRadius = UDim.new(0, 6)
@@ -131,14 +131,13 @@ function CreateESPSection()
     fovAdjustBtn.MouseButton1Click:Connect(function()
         Config.FOVSize = Config.FOVSize + 20
         if Config.FOVSize > 200 then
-            Config.FOVSize = 40  -- Reset về nhỏ nhất
+            Config.FOVSize = 40
         end
         fovAdjustBtn.Text = "FOV " .. Config.FOVSize
         UpdateFOVCircle()
         print("[FOV] Size: " .. Config.FOVSize)
     end)
     
-    -- Update ESP button state khi mở menu
     spawn(function()
         wait(0.1)
         if Config.ESPEnabled then
@@ -167,19 +166,19 @@ function UpdateMainToggle()
         -- SILENT AIM MODE
         if Config.FOVEnabled then
             mainToggle.Text = "SILENT: ON"
-            mainToggle.BackgroundColor3 = Color3.fromRGB(50, 180, 100)  -- Xanh lá
+            mainToggle.BackgroundColor3 = Color3.fromRGB(50, 180, 100)
         else
             mainToggle.Text = "SILENT: OFF"
-            mainToggle.BackgroundColor3 = Color3.fromRGB(180, 50, 50)   -- Đỏ
+            mainToggle.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
         end
     else
         -- AIMLOCK MODE
         if Config.AimEnabled then
             mainToggle.Text = "AIMLOCK: ON"
-            mainToggle.BackgroundColor3 = Color3.fromRGB(50, 120, 180)  -- Xanh dương
+            mainToggle.BackgroundColor3 = Color3.fromRGB(50, 120, 180)
         else
             mainToggle.Text = "AIMLOCK: OFF"
-            mainToggle.BackgroundColor3 = Color3.fromRGB(180, 50, 50)   -- Đỏ
+            mainToggle.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
         end
     end
 end
@@ -227,7 +226,7 @@ function CreateMainToggles()
     toggleFrame.BackgroundTransparency = 1
     toggleFrame.Parent = MenuFrame
     
-    -- Main Toggle (Lớn - Chính)
+    -- Main Toggle
     local mainToggle = Instance.new("TextButton")
     mainToggle.Name = "MainToggle"
     mainToggle.Size = UDim2.new(0.6, 0, 0.7, 0)
@@ -253,7 +252,7 @@ function CreateMainToggles()
     
     -- HotKeys label
     local hotkeyLabel = Instance.new("TextLabel")
-    hotkeyLabel.Text = "HOTKEYS: F8=Main  F9=ESP  F10=Menu"
+    hotkeyLabel.Text = "HOTKEYS: F8=Main  F9=ESP  F10=TEAM  LeftClick=Menu"
     hotkeyLabel.Size = UDim2.new(1, 0, 0, 15)
     hotkeyLabel.Position = UDim2.new(0, 0, 0.95, 0)
     hotkeyLabel.BackgroundTransparency = 1
@@ -284,9 +283,8 @@ UserInputService.InputBegan:Connect(function(input)
         Config.ESPEnabled = not Config.ESPEnabled
         ToggleESP(Config.ESPEnabled)
         
-        -- Update menu button nếu menu đang mở
         if MenuFrame and MenuFrame.Visible then
-            local espToggle = MenuFrame:FindFirstChild("ESPToggle")
+            local espToggle = MenuFrame:FindFirstChild("ESPToggle", true)
             if espToggle then
                 if Config.ESPEnabled then
                     espToggle.Text = "ESP: ON"
@@ -306,7 +304,7 @@ UserInputService.InputBegan:Connect(function(input)
         Config.TeamCheck = not Config.TeamCheck
         
         if MenuFrame and MenuFrame.Visible then
-            local teamToggle = MenuFrame:FindFirstChild("TeamToggle")
+            local teamToggle = MenuFrame:FindFirstChild("TeamToggle", true)
             if teamToggle then
                 if Config.TeamCheck then
                     teamToggle.BackgroundColor3 = Color3.fromRGB(50, 150, 250)
@@ -327,14 +325,12 @@ end)
 -- =====================================================
 
 function InitializeAllFeatures()
-    -- Khởi tạo FOV circle
-    if Drawing then
+        if Drawing then
         CreateFOVCircle()
     else
         warn("Drawing library not available - FOV circle disabled")
     end
     
-    -- Khởi tạo ESP connections
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             player.CharacterAdded:Connect(function()
@@ -348,7 +344,6 @@ function InitializeAllFeatures()
                 RemovePlayerHighlight(player)
             end)
             
-            -- Tạo ngay nếu đã có character
             if player.Character and Config.ESPEnabled then
                 CreatePlayerHighlight(player)
             end
@@ -362,7 +357,6 @@ function InitializeAllFeatures()
             AimAtTorso()
         end
         
-        -- Cập nhật target
         if Config.Mode == 2 and Config.AimEnabled then
             if not CurrentTarget or not IsValidDaHoodPlayer(CurrentTarget) then
                 CurrentTarget = GetClosestTorsoPlayer()
@@ -381,16 +375,16 @@ function InitializeAllFeatures()
         end
     end)
     
-    -- Tạo menu
     MenuFrame = CreateMenu()
-
-    -- Toggle menu bằng nút tròn
-FloatingButton.MouseButton1Click:Connect(function()
-    if MenuFrame then
-        MenuFrame.Visible = not MenuFrame.Visible
+    if FloatingButton and FloatingButton.Parent then
+        FloatingButton.MouseButton1Click:Connect(function()
+            if MenuFrame then
+                MenuFrame.Visible = not MenuFrame.Visible
+            end
+        end)
+    else
+        warn("FloatingButton not found - cannot connect menu toggle")
     end
-end)
-
     
     print("===========================================")
     print("DAHOOD AIM SUITE LOADED SUCCESSFULLY")
@@ -401,10 +395,9 @@ end)
     print("3. ESP HIGHLIGHT (Red) - F9 to toggle")
     print("4. TEAM CHECK - F10 to toggle")
     print("")
-    print("MENU: RightControl to open/close")
+    print("MENU: LeftClick to open/close")
     print("===========================================")
 end
 
--- Chờ game load xong
-wait(3)
+task.wait(3)
 InitializeAllFeatures()
