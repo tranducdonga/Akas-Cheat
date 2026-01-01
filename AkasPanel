@@ -254,7 +254,7 @@ end
 function CreateMenu()
     -- Main Menu Frame
     local menuFrame = Instance.new("Frame")
-    menuFrame.Name = "AkasCheatMenu"
+    menuFrame.Name = "Akas Cheat"
     menuFrame.Size = UDim2.new(0, 350, 0, 400)
     menuFrame.Position = UDim2.new(0.5, -175, 0.5, -200)
     menuFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
