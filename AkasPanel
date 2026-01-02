@@ -1,43 +1,44 @@
--- // CẤU HÌNH
-local FOV_RADIUS   = 60            -- Bán kính FOV
-local AIM_PART     = "Head"        -- "Head" hoặc "HumanoidRootPart"
-local PREDICT      = 0.13          -- Prediction
-local SMOOTH       = 0.2           -- Độ mượt camera
+local FOV_RADIUS = 120
+local AIM_PART   = "Head"
+local PREDICT    = 0.13
+local SMOOTH     = 0.2
+local ESP_ENABLED = true
+local ESP_COLOR   = Color3.fromRGB(255, 0, 0)
+local ESP_ALPHA   = 0.75
 
--- // SERVICES
-local players  = game:GetService("Players")
-local run      = game:GetService("RunService")
-local camera   = workspace.CurrentCamera
+local players = game:GetService("Players")
+local run     = game:GetService("RunService")
+local camera  = workspace.CurrentCamera
+local player  = players.LocalPlayer
 
-local player   = players.LocalPlayer
-local mouse    = player:GetMouse()
+local fov = Drawing.new("Circle")
+fov.Radius    = FOV_RADIUS
+fov.Color     = Color3.fromRGB(0,255,0)
+fov.Thickness = 1
+fov.NumSides  = 60
+fov.Filled    = false
+fov.Visible   = true
 
--- // VẼ FOV CIRCLE
-local fov      = Drawing.new("Circle")
-fov.Radius     = FOV_RADIUS
-fov.Color      = Color3.fromRGB(255, 255, 255)
-fov.Thickness  = 1
-fov.NumSides   = 30
-fov.Filled     = false
-fov.Visible    = true
-
--- // CẬP NHẬT VỊ TRÍ FOV
 run.RenderStepped:Connect(function()
-    fov.Position = Vector2.new(mouse.X, mouse.Y + 36)
+    local vp = camera.ViewportSize
+    fov.Position = Vector2.new(vp.X/2, vp.Y/2)
 end)
 
--- // TÌM NGƯỜI TRONG FOV
-local function inFov()
-    local maxDist = FOV_RADIUS
-    local closest = nil
+local currentTarget = nil
+
+local function getClosestTarget()
+    local closest, dist = nil, FOV_RADIUS
     for _, p in pairs(players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild(AIM_PART) and p.Character.Humanoid.Health > 0 then
-            local pos, on = camera:WorldToViewportPoint(p.Character[AIM_PART].Position)
-            if on then
-                local dist = (Vector2.new(pos.X, pos.Y) - fov.Position).Magnitude
-                if dist < maxDist then
-                    maxDist  = dist
-                    closest  = p
+        if p ~= player and p.Character and p.Character:FindFirstChild(AIM_PART) then
+            local hum = p.Character:FindFirstChild("Humanoid")
+            if hum and hum.Health > 0 then
+                local pos, on = camera:WorldToViewportPoint(p.Character[AIM_PART].Position)
+                if on then
+                    local d = (Vector2.new(pos.X,pos.Y) - fov.Position).Magnitude
+                    if d < dist then
+                        dist = d
+                        closest = p
+                    end
                 end
             end
         end
@@ -45,12 +46,105 @@ local function inFov()
     return closest
 end
 
--- // AIMLOCK LOOP
 run.RenderStepped:Connect(function()
-    local target = inFov()
-    if target and target.Character and target.Character:FindFirstChild(AIM_PART) then
-        local part  = target.Character[AIM_PART]
-        local aimCf = part.CFrame + part.Velocity * PREDICT
-        camera.CFrame = camera.CFrame:Lerp(CFrame.lookAt(camera.CFrame.Position, aimCf.Position), SMOOTH)
+    if not currentTarget
+        or not currentTarget.Character
+        or not currentTarget.Character:FindFirstChild(AIM_PART)
+        or currentTarget.Character:FindFirstChild("Humanoid").Health <= 0
+        or (Vector2.new(camera:WorldToViewportPoint(currentTarget.Character[AIM_PART].Position).X,
+                        camera:WorldToViewportPoint(currentTarget.Character[AIM_PART].Position).Y) - fov.Position).Magnitude > FOV_RADIUS
+    then
+        currentTarget = getClosestTarget()
+    end
+
+    if currentTarget and currentTarget.Character and currentTarget.Character:FindFirstChild(AIM_PART) then
+        local part = currentTarget.Character[AIM_PART]
+        local predictedPos = part.Position + part.Velocity * PREDICT
+        camera.CFrame = camera.CFrame:Lerp(
+            CFrame.lookAt(camera.CFrame.Position, predictedPos),
+            SMOOTH
+        )
     end
 end)
+
+local bones = {
+    {"Head","UpperTorso"},
+    {"UpperTorso","LowerTorso"},
+    {"UpperTorso","LeftUpperArm"},
+    {"LeftUpperArm","LeftLowerArm"},
+    {"LeftLowerArm","LeftHand"},
+    {"UpperTorso","RightUpperArm"},
+    {"RightUpperArm","RightLowerArm"},
+    {"RightLowerArm","RightHand"},
+    {"LowerTorso","LeftUpperLeg"},
+    {"LeftUpperLeg","LeftLowerLeg"},
+    {"LeftLowerLeg","LeftFoot"},
+    {"LowerTorso","RightUpperLeg"},
+    {"RightUpperLeg","RightLowerLeg"},
+    {"RightLowerLeg","RightFoot"}
+}
+
+local espCache = {}
+
+local function newLine()
+    local l = Drawing.new("Line")
+    l.Color = ESP_COLOR
+    l.Transparency = ESP_ALPHA
+    l.Thickness = 2
+    l.Visible = false
+    return l
+end
+
+local function createESP(p)
+    if p == player then return end
+    espCache[p] = {}
+    for i = 1, #bones do
+        espCache[p][i] = newLine()
+    end
+end
+
+local function removeESP(p)
+    if espCache[p] then
+        for _, l in pairs(espCache[p]) do
+            l:Remove()
+        end
+        espCache[p] = nil
+    end
+end
+
+run.RenderStepped:Connect(function()
+    if not ESP_ENABLED then return end
+    for _, p in pairs(players:GetPlayers()) do
+        if p ~= player then
+            local c = p.Character
+            local h = c and c:FindFirstChild("Humanoid")
+            if h and h.Health > 0 then
+                if not espCache[p] then
+                    createESP(p)
+                end
+                for i,bone in ipairs(bones) do
+                    local a = c:FindFirstChild(bone[1])
+                    local b = c:FindFirstChild(bone[2])
+                    local line = espCache[p][i]
+                    if a and b then
+                        local pa, oa = camera:WorldToViewportPoint(a.Position)
+                        local pb, ob = camera:WorldToViewportPoint(b.Position)
+                        if oa and ob then
+                            line.From = Vector2.new(pa.X,pa.Y)
+                            line.To = Vector2.new(pb.X,pb.Y)
+                            line.Visible = true
+                        else
+                            line.Visible = false
+                        end
+                    else
+                        line.Visible = false
+                    end
+                end
+            else
+                removeESP(p)
+            end
+        end
+    end
+end)
+
+players.PlayerRemoving:Connect(removeESP)
